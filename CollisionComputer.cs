@@ -89,6 +89,7 @@ public class CollisionComputer
 	}
 	unsafe void OnContactEventProcessed()
 	{
+#if USE_CONTACTS_API
 		if (m_Count <= 0)
 			return;
 
@@ -121,6 +122,7 @@ public class CollisionComputer
 			}
 		}
 		m_Count = 0;
+#endif
 	}
 
 	[BurstCompile]
