@@ -51,7 +51,7 @@ public class CollisionComputer
 		Physics.ContactEvent += Physics_ContactEvent;
 	}
 
-	public static void UnsubscribeCollisionListener(Rigidbody rb, ICustomCollisionListener listener)
+		public static void SusbcribeCollisionListener(Rigidbody rb, ICustomCollisionListener listener)
 	{
 #if !USE_CONTACTS_API
 		return;
@@ -59,7 +59,7 @@ public class CollisionComputer
 		Initialize();
 		collisionListenerMap[rb.GetInstanceID()] = listener;
 	}
-	public static void SusbcribeCollisionListener(Rigidbody rb, ICustomCollisionListener listener)
+	public static void UnsubscribeCollisionListener(Rigidbody rb, ICustomCollisionListener listener)
 	{
 #if !USE_CONTACTS_API
 		return;
@@ -94,12 +94,30 @@ public class CollisionComputer
 			return;
 
 		m_JobHandle.Complete();
+
+		var lastThisInstanceID = -1;
+		var lastOtherInstanceID = -1;
+		ICustomCollisionListener reusableListenerA = null;
+		ICustomCollisionListener reusableListenerB = null;
 		for (int i = 0; i < m_Count; i++)
 		{
 			JobResultStruct result = m_ResultsArray[i];
 			CustomCollision collision = result.customCollision;
 			var thisInstanceID = collision.dThisBodyInstanceId;
 			var otherInstanceID = collision.dOtherBodyInstanceId;
+			
+			//This reduces the usage of the diccionary, by searching a single time for each pair of bodies, that can contain multiple contacts
+			bool isSameBodyPair = lastThisInstanceID == thisInstanceID && lastOtherInstanceID == otherInstanceID;
+			if(!isSameBodyPair && (result.isCollisionEnter || result.isCollisionExit))
+			{
+				lastThisInstanceID = thisInstanceID;
+				lastOtherInstanceID = otherInstanceID;
+				if (collisionListenerMap.TryGetValue(thisInstanceID, out ICustomCollisionListener listenerA))
+					reusableListenerA = listenerA;
+				if (collisionListenerMap.TryGetValue(otherInstanceID, out ICustomCollisionListener listenerB))
+					reusableListenerB = listenerB;
+			}
+
 			if (result.isCollisionEnter)
 			{
 				//Here you could get the contact points and do whatever you want with them
@@ -108,23 +126,19 @@ public class CollisionComputer
 
 				//Currently for 100% compatibility with unity's OnCollisionEnter, im flipping the collision and sending it to both listeners, like the original unity's collision events does
 				//But you could change this behavior to make it more efficient and avoid duplicated events
-				if (collisionListenerMap.TryGetValue(collision.dThisBodyInstanceId, out ICustomCollisionListener listenerA))
-					listenerA.OnCustomCollisionEnter(collision);
-				if (collisionListenerMap.TryGetValue(otherInstanceID, out ICustomCollisionListener listenerB))
-					listenerB.OnCustomCollisionEnter(collision.AsFlipped());
+				reusableListenerA?.OnCustomCollisionEnter(collision);
+				reusableListenerB?.OnCustomCollisionEnter(collision.AsFlipped());
 			}
 			if (result.isCollisionExit)
 			{
-				if (collisionListenerMap.TryGetValue(thisInstanceID, out ICustomCollisionListener listenerA))
-					listenerA.OnCustomCollisionExit(collision);
-				if (collisionListenerMap.TryGetValue(otherInstanceID, out ICustomCollisionListener listenerB))
-					listenerB.OnCustomCollisionExit(collision.AsFlipped());
+				reusableListenerA?.OnCustomCollisionExit(collision);
+				reusableListenerB?.OnCustomCollisionExit(collision.AsFlipped());
 			}
 		}
 		m_Count = 0;
 #endif
 	}
-
+	
 	[BurstCompile]
 	void Physics_ContactEventBursted(in PhysicsScene scene, in NativeArray<ContactPairHeader>.ReadOnly pairHeaders)
 	{
