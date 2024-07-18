@@ -6,6 +6,8 @@
 // The whole file contains all needed code, it could be spread on different files, but i put everything toghether so you can just copy and paste this script in your game
 // just implement ICustomCollisionListener interface in your class and use StartListenCollisions and StopListenCollisions extension methods to start and stop listening to collisions, it requires a Rigidbody reference for now
 //
+// this requires your project to have unsafe code enabled, if youre not comfortable with enabling it in your project, just add this script to an assembly with that setting enabled
+//
 // Remember to add USE_CONTACTS_API to the project scripting defines for this script to work!
 //
 // Check more repos in my github: https://github.com/Extrys
