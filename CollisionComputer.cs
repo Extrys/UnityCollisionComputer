@@ -6,6 +6,8 @@
 // The whole file contains all needed code
 // just implement ICustomCollisionListener interface in your class and use StartListenCollisions and StopListenCollisions extension methods to start and stop listening to collisions, it requires a Rigidbody reference for now
 //
+// Remember to add USE_CONTACTS_API to the project scripting defines for this script to work!
+//
 // Check more repos in my github: https://github.com/Extrys
 
 using UnityEngine;
