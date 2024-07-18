@@ -3,7 +3,7 @@
 // The problem: Unity's OnCollisionEnter and OnCollisionExit are executed per instance, and when 2 objects collide, both objects execute the event, causing duplicated events.
 // It makes harder to handle things like particles, sounds, or any other effect that should be executed only once per collision.
 //
-// The whole file contains all needed code
+// The whole file contains all needed code, it could be spread on different files, but i put everything toghether so you can just copy and paste this script in your game
 // just implement ICustomCollisionListener interface in your class and use StartListenCollisions and StopListenCollisions extension methods to start and stop listening to collisions, it requires a Rigidbody reference for now
 //
 // Remember to add USE_CONTACTS_API to the project scripting defines for this script to work!
